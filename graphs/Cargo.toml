@@ -1,0 +1,11 @@
+[package]
+name = "graphs"
+version = "0.1.0"
+authors = ["masterusr"]
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+ui = {path = "../ui"}
+serde_json = "*"

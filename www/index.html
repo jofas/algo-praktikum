@@ -1,0 +1,153 @@
+<!Doctype=html/>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <script>
+            var Module = {};
+            var __cargo_web = {};
+            Object.defineProperty(Module, 'canvas', {
+                get: function() {
+                    if (__cargo_web.canvas) {
+                        return __cargo_web.canvas;
+                    }
+                    var canvas = document.createElement('canvas');
+                    document.querySelector('body').appendChild(canvas);
+                    __cargo_web.canvas=canvas;
+                    return canvas;
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <div id="import">
+            <h1>Select JSON Graph</h1>
+            <form method="get" id="jsonSub">
+                <input type="file" name="fu" value="fu" id="fu"/>
+                <input type="button" value="Submit" onclick="imp()"/>
+            </form>
+        </div>
+        <div id="draw" style="display:none">
+            <div id="select_algo">
+                <h1>Select Algorithm</h1>
+                <button id="dijkstra" onclick="select_dijkstra()">Dijkstra</button>
+                <button id="a_star" onclick="select_a_star()">A*</button>
+            </div>
+            <div id="dijkstra_pannel" style="display:none">
+                <h1>Dijkstra</h1>
+                <form method="get" id="dijkstra_start_form">
+                    <input type="text" name="dijkstra_start" id="dijkstra_start"/>
+                    <input type="button" value="Submit" onclick="dijkstra()"/>
+                </form>
+                <button id="dijkstra_next" onclick="dijkstra_next()" style="display:none">Next</button>
+                <div id="vertex_dist"></div>
+            </div>
+            <div id="a_star_pannel" style="display:none">
+                <h1>A*</h1>
+                <form method="get" id="a_star_start_form">
+                    <input type="text" name="a_star_start" id="a_star_start"/>
+                    <input type="text" name="a_star_end" id="a_star_end"/>
+                    <input type="button" value="Submit" onclick="a_star()"/>
+                </form>
+                <button id="a_star_next" onclick="a_star_next()" style="display:none">Next</button>
+                <div id="a_star_info"></div>
+            </div>
+        </div>
+        <script src="ui.js"></script>
+        <script>
+            var g,ds,ass;
+
+            function imp() {
+                var inp = document.getElementById('fu')
+                var file = inp.files[0];
+                var fr = new FileReader();
+
+                Rust.ui.then(function(ui) {
+                    fr.onload= function(e) {
+                        g = ui.new(e.target.result);
+                        var draw;
+                        if(g != null) {
+                            draw = ui.draw(g);
+                        } else {
+                            draw = "Error with JSON import";
+                        }
+                        var d = document.getElementById('draw');
+                        d.innerHTML = draw + d.innerHTML;
+
+                        document.getElementById('import').style['display']='none';
+                        document.getElementById('draw').style['display']='block';
+                    }
+                    fr.readAsText(file);
+                });
+            }
+
+            function select_dijkstra() {
+                document.getElementById('select_algo').style['display']='none';
+                document.getElementById('dijkstra_pannel').style['display']='block';
+            }
+
+            function dijkstra() {
+                var dijkstra_start = parseInt(document.getElementById("dijkstra_start").value,10);
+                if (isNaN(dijkstra_start)) {
+                    var d = document.getElementById('dijkstra_pannel');
+                    d.innerHTML = "<p>INPUT NOT A NUMBER. SELECTED DEFAULT 0.</p>" +
+                        d.innerHTML;
+                    dijkstra_start = 0;
+                }
+
+                Rust.ui.then(function(ui) {
+                    ds = ui.dijkstra_init(g,dijkstra_start);
+                    ds = ui.dijkstra_next(ds);
+                    document.getElementById('select_algo').style['display']='none';
+                    document.getElementById('dijkstra_pannel').style['display']='block';
+                    document.getElementById('dijkstra_start_form').style['display']='none';
+                    document.getElementById('dijkstra_next').style['display']='block';
+                });
+            }
+
+            function dijkstra_next() {
+                Rust.ui.then(function(ui){
+                    ds = ui.dijkstra_next(ds);
+                    console.log(ds);
+                });
+            }
+
+            function select_a_star() {
+                document.getElementById('select_algo').style['display']='none';
+                document.getElementById('a_star_pannel').style['display']='block';
+            }
+
+            function a_star() {
+                var a_star_start = parseInt(document.getElementById("a_star_start").value,10);
+                if (isNaN(a_star_start)) {
+                    var d = document.getElementById('a_star_pannel');
+                    d.innerHTML = "<p>INPUT START NOT A NUMBER. SELECTED DEFAULT 0.</p>" +
+                        d.innerHTML;
+                    a_star_start = 0;
+                }
+
+                var a_star_end = parseInt(document.getElementById("a_star_end").value,10);
+                if (isNaN(a_star_end)) {
+                    var d = document.getElementById('a_star_pannel');
+                    d.innerHTML = "<p>INPUT END NOT A NUMBER. SELECTED DEFAULT 0.</p>" +
+                        d.innerHTML;
+                    a_star_end = 0;
+                }
+                Rust.ui.then(function(ui) {
+                    ass = ui.a_star_init(g,a_star_start,a_star_end);
+                    ass = ui.a_star_next(ass);
+                    document.getElementById('select_algo').style['display']='none';
+                    document.getElementById('a_star_pannel').style['display']='block';
+                    document.getElementById('a_star_start_form').style['display']='none';
+                    document.getElementById('a_star_next').style['display']='block';
+                });
+            }
+
+            function a_star_next() {
+                Rust.ui.then(function(ui){
+                    ass = ui.a_star_next(ass);
+                    console.log(ass);
+                });
+            }
+        </script>
+    </body>
+</html>
